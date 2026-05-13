@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         scanResultHandler = ScanResultHandler(
             copyText = { value -> clipboardWriter.write(value) },
             showMessage = { message -> showToast(message) },
-            moveToBackground = { moveTaskToBack(true) },
+            returnToPreviousApp = { finish() },
         )
 
         updateStandbyService()

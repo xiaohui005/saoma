@@ -15,7 +15,7 @@ class ScanResultHandlerTest {
                 true
             },
             showMessage = { events += it },
-            moveToBackground = { events += "background" },
+            returnToPreviousApp = { events += "return" },
         )
 
         assertFalse(handler.handle(null))
@@ -32,7 +32,7 @@ class ScanResultHandlerTest {
                 true
             },
             showMessage = { events += it },
-            moveToBackground = { events += "background" },
+            returnToPreviousApp = { events += "return" },
         )
 
         assertFalse(handler.handle("   "))
@@ -49,7 +49,7 @@ class ScanResultHandlerTest {
                 true
             },
             showMessage = {},
-            moveToBackground = {},
+            returnToPreviousApp = {},
         )
 
         assertTrue(handler.handle("  abc123  "))
@@ -58,17 +58,17 @@ class ScanResultHandlerTest {
     }
 
     @Test
-    fun successfulCopyRequestsBackground() {
+    fun successfulCopyReturnsToPreviousApp() {
         val events = mutableListOf<String>()
         val handler = ScanResultHandler(
             copyText = { it == "abc123" },
             showMessage = { events += it },
-            moveToBackground = { events += "background" },
+            returnToPreviousApp = { events += "return" },
         )
 
         assertTrue(handler.handle("abc123"))
 
-        assertEquals(listOf("已复制", "background"), events)
+        assertEquals(listOf("已复制", "return"), events)
     }
 
     @Test
@@ -77,7 +77,7 @@ class ScanResultHandlerTest {
         val handler = ScanResultHandler(
             copyText = { false },
             showMessage = { events += it },
-            moveToBackground = { events += "background" },
+            returnToPreviousApp = { events += "return" },
         )
 
         assertFalse(handler.handle("abc123"))

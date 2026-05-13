@@ -3,7 +3,7 @@ package com.debuggingonly.scanner
 class ScanResultHandler(
     private val copyText: (String) -> Boolean,
     private val showMessage: (String) -> Unit,
-    private val moveToBackground: () -> Unit,
+    private val returnToPreviousApp: () -> Unit,
 ) {
     fun handle(rawValue: String?): Boolean {
         val value = rawValue?.trim().orEmpty()
@@ -11,7 +11,7 @@ class ScanResultHandler(
 
         return if (copyText(value)) {
             showMessage("已复制")
-            moveToBackground()
+            returnToPreviousApp()
             true
         } else {
             showMessage("复制失败")
