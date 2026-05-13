@@ -136,7 +136,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun startScanner() {
         val currentPreviewView = previewView ?: return
-        scannerController?.shutdown()
+        if (scannerController != null) return
+
         scannerController = ScannerController(
             context = this,
             lifecycleOwner = this,
