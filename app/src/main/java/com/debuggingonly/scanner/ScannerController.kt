@@ -1,6 +1,7 @@
 package com.debuggingonly.scanner
 
 import android.content.Context
+import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -41,6 +42,7 @@ class ScannerController(
                     }
                 }
                 val analysis = ImageAnalysis.Builder()
+                    .setTargetResolution(Size(1280, 720))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also { it.setAnalyzer(analyzerExecutor, nextAnalyzer) }
