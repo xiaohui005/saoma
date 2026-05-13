@@ -42,13 +42,10 @@ class StandbyService : Service() {
         .build()
 
     private fun openScannerIntent(): PendingIntent {
-        val intent = Intent().setClassName(this, "$packageName.MainActivity").apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
         return PendingIntent.getActivity(
             this,
             0,
-            intent,
+            ScannerLaunchIntents.notificationLaunch(this),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
