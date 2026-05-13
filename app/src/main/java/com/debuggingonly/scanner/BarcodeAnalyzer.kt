@@ -7,6 +7,10 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
+import java.nio.charset.Charset
+import java.nio.charset.CodingErrorAction
 
 class BarcodeAnalyzer(
     private val onCodeDetected: (String) -> Unit,
@@ -41,9 +45,32 @@ class BarcodeAnalyzer(
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
         scanner.process(image)
             .addOnSuccessListener { codes ->
-                codes.firstNotNullOfOrNull { it.rawValue?.trim()?.takeIf(String::isNotEmpty) }
+                codes.firstNotNullOfOrNull { decodeBarcodeValue(it.rawValue, it.rawBytes) }
                     ?.let(onCodeDetected)
             }
             .addOnCompleteListener { imageProxy.close() }
+    }
+}
+
+internal fun decodeBarcodeValue(rawValue: String?, rawBytes: ByteArray?): String? {
+    rawValue?.trim()?.takeIf(String::isNotEmpty)?.let { return it }
+    if (rawBytes == null || rawBytes.isEmpty()) return null
+
+    return listOf("UTF-8", "GB18030", "GBK")
+        .firstNotNullOfOrNull { charsetName -> rawBytes.decodeStrict(charsetName) }
+        ?.trim()
+        ?.takeIf(String::isNotEmpty)
+}
+
+private fun ByteArray.decodeStrict(charsetName: String): String? {
+    return try {
+        Charset.forName(charsetName)
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+            .decode(ByteBuffer.wrap(this))
+            .toString()
+    } catch (_: CharacterCodingException) {
+        null
     }
 }
