@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.0.20" apply false
 }
 
-tasks.register<Wrapper>("wrapper") {
+tasks.named<Wrapper>("wrapper") {
     gradleVersion = "8.8"
     distributionType = Wrapper.DistributionType.BIN
 }
