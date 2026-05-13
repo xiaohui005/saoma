@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">扫码复制</string>
+    <string name="copied">已复制</string>
+    <string name="camera_permission_required">需要相机权限才能扫码</string>
+    <string name="retry_permission">重新授权</string>
+    <string name="standby_notification_title">扫码器待命中</string>
+    <string name="standby_notification_text">点击开始扫码</string>
+    <string name="standby_enabled">后台待命通知</string>
+</resources>
