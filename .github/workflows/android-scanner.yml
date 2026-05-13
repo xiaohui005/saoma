@@ -1,0 +1,53 @@
+name: android-scanner
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "android-scanner/**"
+      - ".github/workflows/android-scanner.yml"
+    tags:
+      - "android-scanner-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-scanner
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Test
+        run: ./gradlew testDebugUnitTest
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-scanner-debug-apk
+          path: android-scanner/app/build/outputs/apk/debug/*.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/android-scanner-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android-scanner/app/build/outputs/apk/debug/*.apk
