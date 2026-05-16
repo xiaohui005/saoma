@@ -6,14 +6,16 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
+import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 
@@ -71,15 +73,22 @@ class StandbyService : Service() {
         if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) return
 
         val manager = getSystemService(WINDOW_SERVICE) as WindowManager
-        val button = Button(this).apply {
+        val button = TextView(this).apply {
             text = getString(R.string.floating_button_text)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            textSize = 16f
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.argb(220, 4, 81, 174))
+            }
             setOnClickListener {
                 startActivity(ScannerLaunchIntents.notificationLaunch(this@StandbyService))
             }
         }
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            dp(64),
+            dp(64),
             if (Build.VERSION.SDK_INT >= 26) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             } else {
@@ -103,6 +112,10 @@ class StandbyService : Service() {
         windowManager?.removeView(button)
         floatingButton = null
         windowManager = null
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
     }
 
     companion object {

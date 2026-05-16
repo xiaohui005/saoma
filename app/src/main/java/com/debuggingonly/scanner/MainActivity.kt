@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateStandbyService()
         if (hasCameraPermission() && previewView != null) {
             startScanner()
         }
