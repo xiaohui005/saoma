@@ -12,6 +12,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -29,6 +30,7 @@ class StandbyService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "standby service started")
         startForeground(NOTIFICATION_ID, buildNotification())
         showFloatingButtonIfAllowed()
         return START_STICKY
@@ -69,8 +71,14 @@ class StandbyService : Service() {
     }
 
     private fun showFloatingButtonIfAllowed() {
-        if (floatingButton != null) return
-        if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) return
+        if (floatingButton != null) {
+            Log.d(TAG, "floating button already shown")
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) {
+            Log.d(TAG, "floating button skipped: overlay permission missing")
+            return
+        }
 
         val manager = getSystemService(WINDOW_SERVICE) as WindowManager
         val button = TextView(this).apply {
@@ -102,9 +110,15 @@ class StandbyService : Service() {
             y = 0
         }
 
-        manager.addView(button, params)
+        try {
+            manager.addView(button, params)
+        } catch (error: RuntimeException) {
+            Log.e(TAG, "floating button add failed", error)
+            return
+        }
         windowManager = manager
         floatingButton = button
+        Log.d(TAG, "floating button shown")
     }
 
     private fun removeFloatingButton() {
@@ -112,6 +126,7 @@ class StandbyService : Service() {
         windowManager?.removeView(button)
         floatingButton = null
         windowManager = null
+        Log.d(TAG, "floating button removed")
     }
 
     private fun dp(value: Int): Int {
@@ -121,6 +136,7 @@ class StandbyService : Service() {
     companion object {
         private const val CHANNEL_ID = "scanner_standby"
         private const val NOTIFICATION_ID = 1001
+        private const val TAG = "ScannerStandby"
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(context, Intent(context, StandbyService::class.java))

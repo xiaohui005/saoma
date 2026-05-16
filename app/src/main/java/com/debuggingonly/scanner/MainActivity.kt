@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var scanResultHandler: ScanResultHandler
     private var previewView: PreviewView? = null
     private var scannerController: ScannerController? = null
+    private var overlayPermissionRequestStarted = false
 
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -31,6 +33,14 @@ class MainActivity : AppCompatActivity() {
         } else {
             showPermissionRequiredUi()
         }
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        Log.d(TAG, "notification permission granted=$granted")
+        requestStandbyPermissionsIfNeeded()
+        updateStandbyService()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +71,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        requestStandbyPermissionsIfNeeded()
         updateStandbyService()
         if (hasCameraPermission() && previewView != null) {
             startScanner()
@@ -119,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             setOnCheckedChangeListener { _, checked ->
                 settingsStore.setStandbyEnabled(checked)
                 if (checked) {
-                    requestOverlayPermissionIfNeeded()
+                    requestStandbyPermissionsIfNeeded()
                 }
                 updateStandbyService()
             }
@@ -136,6 +147,7 @@ class MainActivity : AppCompatActivity() {
 
         previewView = currentPreviewView
         setContentView(container)
+        requestStandbyPermissionsIfNeeded()
         startScanner()
     }
 
@@ -162,9 +174,30 @@ class MainActivity : AppCompatActivity() {
         ).also { it.start() }
     }
 
-    private fun requestOverlayPermissionIfNeeded() {
-        if (android.os.Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)) return
+    private fun requestStandbyPermissionsIfNeeded() {
+        if (!settingsStore.isStandbyEnabled()) return
 
+        if (requestNotificationPermissionIfNeeded()) return
+        requestOverlayPermissionIfNeeded()
+    }
+
+    private fun requestNotificationPermissionIfNeeded(): Boolean {
+        if (android.os.Build.VERSION.SDK_INT < 33 || canPostNotifications()) return false
+
+        Log.d(TAG, "requesting notification permission")
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        return true
+    }
+
+    private fun requestOverlayPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)) {
+            overlayPermissionRequestStarted = false
+            return
+        }
+        if (overlayPermissionRequestStarted) return
+
+        overlayPermissionRequestStarted = true
+        Log.d(TAG, "opening overlay permission settings")
         showToast(getString(R.string.overlay_permission_required))
         startActivity(ScannerLaunchIntents.overlayPermissionSettings(this))
     }
@@ -178,9 +211,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStandbyService() {
-        if (settingsStore.isStandbyEnabled() && canPostNotifications()) {
+        if (settingsStore.isStandbyEnabled()) {
+            Log.d(TAG, "starting standby service")
             StandbyService.start(this)
         } else {
+            Log.d(TAG, "stopping standby service: standby disabled")
             StandbyService.stop(this)
         }
     }
@@ -191,5 +226,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private companion object {
+        const val TAG = "ScannerStandby"
     }
 }
