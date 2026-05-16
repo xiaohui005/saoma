@@ -3,6 +3,7 @@ package com.debuggingonly.scanner
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
@@ -116,6 +117,9 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(16), dp(12), dp(16), dp(12))
             setOnCheckedChangeListener { _, checked ->
                 settingsStore.setStandbyEnabled(checked)
+                if (checked) {
+                    requestOverlayPermissionIfNeeded()
+                }
                 updateStandbyService()
             }
         }
@@ -155,6 +159,13 @@ class MainActivity : AppCompatActivity() {
                 }
             },
         ).also { it.start() }
+    }
+
+    private fun requestOverlayPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)) return
+
+        showToast(getString(R.string.overlay_permission_required))
+        startActivity(ScannerLaunchIntents.overlayPermissionSettings(this))
     }
 
     private fun canPostNotifications(): Boolean {

@@ -22,4 +22,14 @@ class ScannerLaunchIntentsTest {
         assertTrue(intent.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK != 0)
         assertTrue(intent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS != 0)
     }
+
+    @Test
+    fun overlayPermissionSettingsOpensAppSpecificSettings() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        val intent = ScannerLaunchIntents.overlayPermissionSettings(context)
+
+        assertEquals(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, intent.action)
+        assertEquals("package:${context.packageName}", intent.data.toString())
+    }
 }

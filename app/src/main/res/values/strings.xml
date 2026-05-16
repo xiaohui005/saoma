@@ -6,4 +6,6 @@
     <string name="standby_notification_title">扫码器待命中</string>
     <string name="standby_notification_text">点击开始扫码</string>
     <string name="standby_enabled">后台待命通知</string>
+    <string name="floating_button_text">扫码</string>
+    <string name="overlay_permission_required">请开启悬浮窗权限以显示扫码悬浮按钮</string>
 </resources>
